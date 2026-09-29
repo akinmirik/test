@@ -110,6 +110,6 @@ setInterval(() => {
   }
 }, 15000);
 
-server.listen(PORT, () => {
+server.listen(PORT, process.env.HOST || '0.0.0.0', () => {
   console.log(`Lethal Quota server running on ${tls ? 'https' : 'http'}://localhost:${PORT}`);
 });
