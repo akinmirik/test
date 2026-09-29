@@ -96,7 +96,7 @@ EOF
 else
   log "Starting with nohup (and an @reboot cron entry)"
   [ -f "$APP_DIR/server.pid" ] && kill "$(cat "$APP_DIR/server.pid")" 2>/dev/null || true
-  START="cd $APP_DIR/lethal-quota && PORT=$PORT nohup $NODE_BIN server/index.js >> $APP_DIR/server.log 2>&1 & echo \$! > $APP_DIR/server.pid"
+  START="cd $APP_DIR/lethal-quota; PORT=$PORT nohup $NODE_BIN server/index.js >> $APP_DIR/server.log 2>&1 < /dev/null & echo \$! > $APP_DIR/server.pid"
   bash -c "$START"
   ( crontab -l 2>/dev/null | grep -v lethal-quota; echo "@reboot $START" ) | crontab - 2>/dev/null || true
 fi

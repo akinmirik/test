@@ -20,6 +20,16 @@ Open `http://localhost:3000`, enter a name, press **Host new crew**, then press 
 > SSL_KEY=key.pem SSL_CERT=cert.pem npm start
 > ```
 
+## Deploy to your own server (VPS)
+
+On any Debian/Ubuntu server, run this over SSH. The installer installs Node, runs the game as a service, and sets up automatic HTTPS with Caddy at `https://<your-ip-with-dashes>.sslip.io`:
+
+```bash
+ssh -t user@your-server 'bash -c "$(curl -fsSL https://raw.githubusercontent.com/akinmirik/test/claude/keen-wright-ihifhp/lethal-quota/deploy/install.sh)"'
+```
+
+It needs ports 80 and 443 open. Run it again at any time to update. Without sudo, it installs for your user only and serves plain HTTP on port 3000, where browsers block the microphone.
+
 ## The game loop
 
 1. **In orbit**, use the ship **terminal** (`MOONS`, `ROUTE <moon>`, `STORE`, `BUY <item> [n]`, `SCAN`, `QUOTA`, `TRANSMIT <msg>`, `CREW`). Then pull the **lever** to land.
