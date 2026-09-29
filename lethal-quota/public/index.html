@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lethal Quota</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 fill=%22%23ff7a1a%22/%3E%3Ctext x=%228%22 y=%2213%22 font-size=%2212%22 text-anchor=%22middle%22 font-family=%22monospace%22 font-weight=%22bold%22%3EQ%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">
+    { "imports": { "three": "/vendor/three/three.module.js" } }
+  </script>
+</head>
+<body>
+  <canvas id="view"></canvas>
+
+  <!-- ============ MAIN MENU ============ -->
+  <div id="menu" class="screen">
+    <div class="menu-box">
+      <h1 class="logo">LETHAL<span>QUOTA</span></h1>
+      <p class="tagline">A co-op scrap salvage horror game &mdash; with proximity voice chat.</p>
+      <label>Employee name <input id="name" maxlength="16" placeholder="Employee"></label>
+      <div class="row">
+        <button id="host" class="btn primary">Host new crew</button>
+      </div>
+      <div class="row">
+        <input id="code" maxlength="5" placeholder="CREW CODE" autocomplete="off">
+        <button id="join" class="btn">Join crew</button>
+      </div>
+      <p id="menu-error" class="error"></p>
+      <details class="howto">
+        <summary>How to play</summary>
+        <p>You are a contracted employee of The Company. Land on abandoned moons, enter the facility, collect scrap and bring it back to the ship. Every 3 days you must sell enough at the Company to meet the profit quota &mdash; or you're fired.</p>
+        <p>Your microphone is <b>proximity based</b>: crewmates only hear you when they're near. Carry a <b>walkie-talkie</b> to talk across the map. Blind dogs outside can hear you talk. The dead can only talk to the dead.</p>
+        <table>
+          <tr><td>WASD / Mouse</td><td>Move / look</td></tr>
+          <tr><td>Shift / C / Space</td><td>Sprint / crouch (toggle) / jump</td></tr>
+          <tr><td>E</td><td>Interact / pick up</td></tr>
+          <tr><td>G</td><td>Drop held item</td></tr>
+          <tr><td>1-4, wheel</td><td>Switch slot</td></tr>
+          <tr><td>LMB</td><td>Use item (light, swing, hold to talk on walkie, throw)</td></tr>
+          <tr><td>RMB</td><td>Scan for scrap</td></tr>
+          <tr><td>V</td><td>Push-to-talk (if enabled)</td></tr>
+          <tr><td>M</td><td>Mute microphone</td></tr>
+          <tr><td>T / Enter</td><td>Text chat</td></tr>
+          <tr><td>Tab</td><td>Crew list</td></tr>
+          <tr><td>Esc</td><td>Menu &amp; settings</td></tr>
+        </table>
+      </details>
+    </div>
+  </div>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" class="hidden">
+    <div id="crosshair"></div>
+    <div id="prompt"></div>
+    <div id="vitals">
+      <div class="suit"><div id="hp-fill"></div><span id="hp-text">100</span></div>
+      <div class="stamina"><div id="stam-fill"></div></div>
+      <div id="weight">0 lb</div>
+    </div>
+    <div id="clock" class="hidden"></div>
+    <div id="shipinfo" class="hidden"></div>
+    <div id="inventory"></div>
+    <div id="helditem"></div>
+    <div id="mic-indicator" title="Microphone"><span class="mic-icon"></span><span id="mic-label">MIC</span><div id="mic-level"></div></div>
+    <div id="toasts"></div>
+    <div id="signal" class="hidden"></div>
+    <div id="chat">
+      <div id="chat-log"></div>
+      <input id="chat-input" class="hidden" maxlength="200" placeholder="Say something... (Enter to send)">
+    </div>
+    <div id="crew" class="hidden"></div>
+    <div id="scan-layer"></div>
+    <div id="dead-overlay" class="hidden">
+      <div class="dead-title">YOU DIED</div>
+      <div id="dead-cause"></div>
+      <div id="spectating"></div>
+      <div class="dead-hint">Click to switch player &middot; you can only talk to other dead crew</div>
+    </div>
+    <div id="hurt-flash"></div>
+    <div id="flashbang"></div>
+    <div id="fade"></div>
+  </div>
+
+  <!-- ============ TERMINAL ============ -->
+  <div id="terminal" class="hidden">
+    <div class="term-screen">
+      <pre id="term-out"></pre>
+      <div class="term-line">&gt; <input id="term-in" maxlength="80" autocomplete="off" spellcheck="false"></div>
+    </div>
+    <div class="term-hint">ESC to exit terminal</div>
+  </div>
+
+  <!-- ============ DAY REPORT ============ -->
+  <div id="report" class="hidden screen">
+    <div class="report-box" id="report-body"></div>
+  </div>
+
+  <!-- ============ PAUSE / SETTINGS ============ -->
+  <div id="pause" class="hidden screen">
+    <div class="menu-box">
+      <h2>PAUSED</h2>
+      <p>Crew code: <b id="pause-code"></b> <button id="copy-link" class="btn small">Copy invite link</button></p>
+      <fieldset>
+        <legend>Voice</legend>
+        <label><input type="checkbox" id="opt-ptt"> Push-to-talk (hold V)</label>
+        <label><input type="checkbox" id="opt-mute"> Mute microphone</label>
+        <label>Microphone <select id="opt-mic"></select></label>
+        <label>Voice volume <input type="range" id="opt-voicevol" min="0" max="2" step="0.05" value="1"></label>
+        <div id="voice-status" class="muted"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Game</legend>
+        <label>Master volume <input type="range" id="opt-vol" min="0" max="1" step="0.05" value="0.8"></label>
+        <label>Mouse sensitivity <input type="range" id="opt-sens" min="0.2" max="3" step="0.05" value="1"></label>
+        <label>Render scale <input type="range" id="opt-scale" min="0.25" max="1" step="0.05" value="0.5"></label>
+        <label>Field of view <input type="range" id="opt-fov" min="60" max="100" step="1" value="72"></label>
+      </fieldset>
+      <div class="row">
+        <button id="resume" class="btn primary">Resume</button>
+        <button id="leave" class="btn">Leave crew</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="click-to-play" class="hidden">Click to play</div>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

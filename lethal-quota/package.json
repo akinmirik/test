@@ -1,0 +1,20 @@
+{
+  "name": "lethal-quota",
+  "version": "1.0.0",
+  "description": "A browser-based co-op horror scrap-collecting game with proximity voice chat, inspired by Lethal Company.",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node test/smoke.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "GPL-3.0",
+  "dependencies": {
+    "three": "^0.186.1",
+    "ws": "^8.22.0"
+  }
+}
